@@ -4,10 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.*;
 
 import static java.util.concurrent.TimeUnit.*;
 
@@ -16,24 +15,26 @@ public class Retry {
 
     ScheduledExecutorService ses = Executors.newSingleThreadScheduledExecutor();
 
-    public String doRetry(){
-        ses.scheduleAtFixedRate(
-                new Runnable() {
-                int maxCount = 3;
-            @Override
-           public void run() {
-                if(--maxCount <= 0) {
-                    System.out.println((char)27 + "[97;43m"+ "shutdown" +(char)27+"[0m");
-                    ses.shutdown();
-                }
+    public Future doRetry() throws InterruptedException, ExecutionException, TimeoutException {
+        final String[] result = {""};
+        final List<Integer> maxCount = new java.util.ArrayList<>(List.of(1, 2, 3, 4, 5));
 
+        var foo = ses.scheduleAtFixedRate(
+                () -> {
+                    ses.submit(() -> {
+                        if (maxCount.size() == 0) {
+                            System.out.println((char) 27 + "[97;43m" + "shutdown" + (char) 27 + "[0m");
+                            result[0] = "my do";
+                            maxCount.add(-1);
+                        }
 
-                   System.out.println((char)27 + "[97;43m"+ "do-work" +(char)27+"[0m");
-           }
-        }, 0, 100, MILLISECONDS);
+                        maxCount.remove(0);
+                    });
 
+                }, 0, 100, MILLISECONDS);
 
-        return "my do";
+        var res = foo.get();
+        return null;
     }
 
 }
