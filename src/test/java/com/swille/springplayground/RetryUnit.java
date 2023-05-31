@@ -19,8 +19,12 @@ public class RetryUnit {
     @Test
     void doRetry_works() throws Exception {
         var actual = retry.doRetry();
-//        Thread.sleep(3000);
-        assertThat(actual).isEqualTo("my do");
+        assertThat(actual[0]).isEqualTo("success");
+    }
+    @Test
+    void doRetry2_works() throws Exception {
+        var actual = retry.retry2();
+        assertThat(actual[0]).isEqualTo("success");
     }
 
 }
